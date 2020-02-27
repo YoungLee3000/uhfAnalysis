@@ -52,10 +52,10 @@ function [ eigenMatrix ] = cal_eigen(data,baseline)
     extremumPosSet = [der_result.p_to_n ; der_result.n_to_p];
       
            
-    ei_peak =    max(extremumSet) ;
-    if (ei_peak < baseline)
+%     ei_peak =    max(extremumSet) ;
+%     if (ei_peak < baseline)
         ei_peak = max(inter_dat);
-    end     
+%     end     
     peak_pos = g_xLength - 1;
     peak_pos_rel =     find( inter_dat == ei_peak);
     if ~isempty(peak_pos_rel)

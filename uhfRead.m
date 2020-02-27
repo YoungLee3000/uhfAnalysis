@@ -37,12 +37,15 @@ realCount = 0;
 
 for i=1:mapSize
     sprintf('soving the label of %d....',i)
-    tempSize = max(size( matrixSet{i}));
+    tempSize = size( matrixSet{i},1);
     if tempSize < 500 % ----ignore the sample which has a length less than 500 
         continue;
     end 
     if ~exist(nameStr{i},'dir')
-        mkdir (nameStr{i})
+        mkdir (nameStr{i});
+    else
+        rmdir(nameStr{i},'s');
+        mkdir (nameStr{i});
     end   
     realCount = realCount + 1;
     
@@ -72,9 +75,9 @@ for i=1:mapSize
                 %interpolation between the zone
                 if pointer1 ~= pointer2 
                     normalCount = normalCount + 1;
-                    tempX = xTime(pointer1:pointer2);
+                    tempX = xTime(pointer1:pointer2)   - xTime(pointer1);
                     tempY = yRssi(pointer1:pointer2);
-                    tempSmallSize = max(size(tempX));
+                    tempSmallSize = size(tempX,1);
                     dx = (tempX(tempSmallSize) - tempX(1))  / (g_interNum - 1);
                     tempXi =  (tempX(1):dx:tempX(tempSmallSize))';
                     tempYi = interp1(tempX,tempY,tempXi);
@@ -140,7 +143,7 @@ for i=1:mapSize
                 %interpolation between the zone
                 if pointer1 ~= pointer2 
                     postitiveCount = postitiveCount + 1;
-                    tempX = xTime(pointer1:pointer2);
+                    tempX = xTime(pointer1:pointer2) - xTime(pointer1);
                     tempY = yRssi(pointer1:pointer2);
                     tempSmallSize = max(size(tempX));
                     dx = (tempX(tempSmallSize) - tempX(1))  / (g_interNum - 1);
@@ -175,7 +178,7 @@ for i=1:mapSize
                 %interpolation between the zone
                 if pointer1 ~= pointer2 
                     negativeCount = negativeCount + 1;
-                    tempX = xTime(pointer1:pointer2);
+                    tempX = xTime(pointer1:pointer2) - xTime(pointer1);
                     tempY = yRssi(pointer1:pointer2);
                     tempSmallSize = max(size(tempX));
                     dx = (tempX(tempSmallSize) - tempX(1))  / (g_interNum - 1);

@@ -6,12 +6,12 @@
 %     fprintf(fid,'%d\t%8.2f\t%8.2f\t%8.2f\t%8.2f\t%d\n',samples(i,1),samples(i,2),...
 %         samples(i,3),samples(i,4),samples(i,5),samples(i,6));
 % end
-posdat = load('E20000197812013320104799/pos_2.txt');
-figure(1);
-plot(posdat);
-set(gcf, 'PaperPosition', [-0.75 0.2 26.5 26]);%设置图的位置
-set(gcf, 'PaperSize', [25 25]); %Keep the same paper size，设置pdf纸张的大小，
-saveas(gcf,['pos_',int2str(1)],'pdf');
+% posdat = load('E20000197812013320104799/pos_2.txt');
+% figure(1);
+% plot(posdat);
+% set(gcf, 'PaperPosition', [-0.75 0.2 26.5 26]);%设置图的位置
+% set(gcf, 'PaperSize', [25 25]); %Keep the same paper size，设置pdf纸张的大小，
+% saveas(gcf,['pos_',int2str(1)],'pdf');
 
 
 clear;
@@ -23,7 +23,10 @@ posCount = 1;
 negCount = 1;
 plotEnd = 0;
 samples = [];
-
+fig_dir = 'uhf-figure';
+if ~exist(fig_dir,'dir')
+    mkdir (fig_dir);
+end   
 while ~plotEnd
     tempPosFile = [fileDir,'pos_',int2str(posCount),'.txt'];
     tempNegFile = [fileDir,'neg_',int2str(negCount),'.txt'];
@@ -34,7 +37,7 @@ while ~plotEnd
         set(gcf, 'PaperPosition', [-0.75 0.2 26.5 26]);%设置图的位置
         set(gcf, 'PaperSize', [25 25]); %Keep the same paper size，设置pdf纸张的大小，
         saveas(gcf,['pos_',int2str(posCount)],'pdf');
-        movefile(['pos_',int2str(posCount),'.pdf'],'uhf-figure');
+        movefile(['pos_',int2str(posCount),'.pdf'],fig_dir);
         sprintf('the %d positive data of the target label complished....',posCount)
         posCount = posCount + 1;
     end    
@@ -46,7 +49,7 @@ while ~plotEnd
         set(gcf, 'PaperPosition', [-0.75 0.2 26.5 26]);%设置图的位置
         set(gcf, 'PaperSize', [25 25]); %Keep the same paper size，设置pdf纸张的大小，
         saveas(gcf,['neg_',int2str(negCount)],'pdf');
-        movefile(['neg_',int2str(negCount),'.pdf'],'uhf-figure');
+        movefile(['neg_',int2str(negCount),'.pdf'],fig_dir);
         
         sprintf('the %d negative data of the target label complished....',negCount)
         negCount = negCount + 1;

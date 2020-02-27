@@ -27,13 +27,13 @@ while ~plotEnd
     end    
     
     if exist(tempNegFile,'file')
-%         negData = load(tempNegFile);
-%         tempEigen = cal_eigen(negData,INIT_PAR.baseline);
-%         if tempEigen(1) ~= 0
-%             tempSample = [tempEigen,0];
-%             samples = [samples;tempSample];
-%         sprintf('the %d  data complished , in file %s ....',length(samples),tempNegFile )
-%         end 
+        negData = load(tempNegFile);
+        tempEigen = cal_eigen(negData,INIT_PAR.baseline);
+        if tempEigen(1) ~= 0
+            tempSample = [tempEigen,0];
+            samples = [samples;tempSample];
+        sprintf('the %d  data complished , in file %s ....',length(samples),tempNegFile )
+        end 
 %         
 
         negCount = negCount + 1;

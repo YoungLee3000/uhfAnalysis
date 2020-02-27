@@ -25,6 +25,9 @@ negLength = size(negData,1);
 % various kinds of model predict, and calculate the accuracy of each model
 if ~exist(g_dir,'dir')
     mkdir (g_dir);
+else
+    rmdir(g_dir,'s');
+    mkdir (g_dir);
 end   
 
 pos_space = round(posLength / g_space_num) - 1;
@@ -101,7 +104,7 @@ else
         
         %---train the fifth model, discriminant analysis classifier
         mdl_dac = ClassificationDiscriminant.fit(i_train_dat,i_train_rel);    
-        predict_rel   =  [predict_rel, predict(mdl_ens,i_test_dat)];  
+        predict_rel   =  [predict_rel, predict(mdl_dac,i_test_dat)];  
         
         
         %---train the sixth model, Support Vector Machine

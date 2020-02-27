@@ -8,9 +8,8 @@ mdl_dac = ClassificationDiscriminant.fit(train_dat ,train_rel);
 % mdl_ens = fitensemble(train_dat ,train_rel,'AdaBoostM1' ,100,'tree','type','classification');  
 
 %define the initial parameter
-g_options = weboptions('CharacterEncoding','utf-8','Timeout',3);
 g_count_file = 'label_count.txt';
-g_read_file = 'realResult.txt';
+g_read_file = 'realResult.csv';
 fclose('all');
 if exist(g_count_file,'file')
     delete(g_count_file);
@@ -18,79 +17,56 @@ end
 if exist(g_read_file,'file')
     delete(g_read_file);
 end 
-g_loop = 1;
-% INIT_PAR = init_val();
-g_stepLength = 4000;
+
+INIT_PAR = init_val();
+g_stepLength = INIT_PAR.timeStep * 1000 + 1000;
+g_interNum = INIT_PAR.timeStep * INIT_PAR.frequency;
+g_baseline = INIT_PAR.baseline;
 g_stepMax = 5000;
-g_interNum = 30;
-g_baseline = -60;
 g_testNum = 10; 
-g_url = 'http://www.chaussure-gros.com/android/getjson.php?';
 
 
 
+%------read the orgin data 
+fileID = fopen(INIT_PAR.fileName);
+data = textscan(fileID,'%s %d %n %f %s %f','Delimiter',',');
+fclose(fileID);
 
+dataLength = size(data{1},1);
 g_labelMap = containers.Map;
-g_page = 1;
-g_num_each_page = 30;
-g_read_count = 0;
-g_total_count = 0;
-g_each_count = 0;
+tot_rel = [];
 %foreach time ,otbain the json data from url
-while g_loop
-    t0 = clock;
-    json_dat = [];
-    json_url = [g_url,'&page=',int2str(g_page),'&count=',int2str(g_each_count)];
-    if g_total_count > 30 && g_each_count == 1
-        json_url = [g_url,'&page=',int2str(g_page),'&count=',int2str(g_each_count), ...
-                   '&delete=',int2str(g_page - 1) ];
-    end    
-    
-    try 
-        json_dat = webread(json_url);
-    catch
-        continue;
-    end
-    timediff = etime(clock,t0);
+for i=1:dataLength
     
     
-    if strcmp('file is empty',json_dat) ||  strcmp('Unable to open file!',json_dat)
-        continue;
-    else
-        output = parse_json(json_dat);
-        if ~isempty(output.uhfdata)
-            if strcmp('read end',output.uhfdata{1}.label)
-                break;
-            end  
-            g_total_count = g_total_count  + 1;
-            outputCell = output.uhfdata{1};
-            tempKey = outputCell.label;
-            tempTime = str2double(outputCell.time);
-            tempRssi = str2double(outputCell.rssi);
-            fileCount=fopen(g_count_file ,'at+');
-            fprintf(fileCount,'%s\t%8.2f\t%8.2f\n',tempKey,tempTime,tempRssi);
-            fclose('all');
-%             sprintf('total count : %d , time cost: %f ',g_total_count, timediff)
-            g_each_count = mod(g_total_count,g_num_each_page);
-            g_page = fix(g_total_count / g_num_each_page) + 1;
+    
+           
+            
+            tempKey = data{1}{i};
+            tempTime = data{3}(i);
+            tempRssi = data{4}(i);
+            
             if (g_labelMap.isKey(tempKey))
                 tempStruct = g_labelMap(tempKey);
                 if (tempTime < tempStruct.startTime); tempStruct.startTime = tempTime; end
+                
+                
                 tempStruct.matrix = [tempStruct.matrix; [tempTime, tempRssi]];
+                
                 g_labelMap(tempKey) = tempStruct;
                 tempSmallSize = length(tempStruct.matrix);
                 
                 % if the data is enough, then analysis this small part
                 % data, to judge if the box is hugging
-                if ( tempTime - tempStruct.startTime  >= g_stepLength && ...
-                  tempSmallSize >= g_testNum)
+                if ( tempTime - tempStruct.startTime  >= g_stepLength && ... 
+                     tempSmallSize >= g_testNum)
                 
                     
                     %sort the data according time
                     [rel , pos] = sort(tempStruct.matrix(:,1));
                     tempStruct.matrix(:,1) = tempStruct.matrix(pos,1) ;
                     tempStruct.matrix(:,2) = tempStruct.matrix(pos,2) ;
-                    xTime =  tempStruct.matrix(:,1) - tempStruct.matrix(1,1);
+                    xTime =  tempStruct.matrix(:,1);
                     yRssi = tempStruct.matrix(:,2);
                     dx = (xTime(tempSmallSize) - xTime(1))  / (g_interNum - 1);
                     tempXi =  (xTime(1):dx:xTime(tempSmallSize))';
@@ -101,16 +77,13 @@ while g_loop
                     if (length(find(tempEigen==0)) == 12)
                         predict_rel = 0;
                     else
-                        predict_rel_tot = predict(mdl_dac,[tempEigen;zeros(1,12)] );
-                        predict_rel = predict_rel_tot(1);
+                        predict_rel= predict(mdl_dac,tempEigen );        
                     end
                     if predict_rel == 1.0
-                        g_read_count = g_read_count + 1;
                         fid=fopen(g_read_file,'at+');
-                        fprintf(fid,'%s\t%8.2f\t%d\n',tempKey,tempTime,g_total_count);
+                        fprintf(fid,'%s,%8.2f,%d\n',tempKey,tempTime,predict_rel);
                         fclose('all');
-                        sprintf('the label %s is read, read count: %d ,total count: %d', ...
-                            tempKey,g_read_count,g_total_count)
+                        sprintf('the label %s is read',tempKey)
                         remove(g_labelMap,tempKey);
                     else
                         if tempTime - tempStruct.startTime  >= g_stepMax
@@ -120,8 +93,9 @@ while g_loop
                             tempStruct.matrix = [tempTime, tempRssi];
                             tempStruct.startTime = tempTime;
                             g_labelMap(tempKey) = tempStruct;
-                        end  
-                    end    
+                        end    
+                    end 
+                    tot_rel =[tot_rel;predict_rel];
                 end    
                 
             else
@@ -129,8 +103,8 @@ while g_loop
                 tempStruct.matrix =  [tempTime, tempRssi];
                 g_labelMap = [g_labelMap; containers.Map(tempKey,tempStruct)];
             end
-        end    
-    end    
+       
+     
     
 end
 
